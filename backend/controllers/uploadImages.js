@@ -1,6 +1,6 @@
 const fs = require('node:fs');
 const path = require('node:path');
-const Resume = require('../models/resume');
+const Resume = require('../models/Resume');
 const upload = require('../middlewares/uploadMiddleware')
 
 const uploadResumeImages = async (req, res) => {
