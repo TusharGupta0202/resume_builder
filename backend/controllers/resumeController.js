@@ -1,5 +1,6 @@
 const fs = require('node:fs');
 const path = require('node:path');
+const cloudinary = require('../cloudinary');
 
 const Resume = require('../models/Resume');
 
@@ -121,36 +122,36 @@ const updateResume = async (req, res) => {
     }
 }
 
+
+
 const deleteResume = async (req, res) => {
-    try {
-        const resume = await Resume.findOne({ _id: req.params.id, userId: req.user._id });
-        if (!resume) {
-            return res.status(404).json({ message: 'Resume not found' });
-        }
-
-        const uploadFolder = path.join(__dirname,'..','uploads');
-        const baseUrl = `${req.protocol}://${req.get('host')}`;
-
-        if(resume.thumbnailLink){
-            const oldThumbnail = path.join(uploadFolder, path.basename(resume.thumbnailLink));
-            if (fs.existsSync(oldThumbnail)) fs.unlinkSync(oldThumbnail);
-        }
-
-        if(resume.profileInfo?.profilePreviewUrl){
-            const oldProfile = path.join(uploadFolder, path.basename(resume.profileInfo.profilePreviewUrl));
-            if (fs.existsSync(oldProfile)) fs.unlinkSync(oldProfile);
-        }
-
-        const deletedResume = await Resume.findOneAndDelete({ _id: req.params.id, userId: req.user._id });
-        if (!deletedResume) {
-            return res.status(404).json({ message: 'Resume not found' });
-        }
-
-        res.json({ message: 'Resume deleted successfully' });
-    } catch (error) {
-        res.status(500).json({ message: 'Failed to fetch resumes', error: error.message });
+  try {
+    const resume = await Resume.findOne({ _id: req.params.id, userId: req.user._id });
+    if (!resume) {
+      return res.status(404).json({ message: 'Resume not found' });
     }
-}
+
+    const deleteCloudinaryImage = async (url) => {
+      if (!url) return;
+      const publicId = url.split('/').pop().split('.')[0]; // extract from URL
+      try {
+        await cloudinary.uploader.destroy(`resume_builder/${publicId}`);
+      } catch (err) {
+        console.warn('Cloudinary deletion failed:', err.message);
+      }
+    };
+
+    await deleteCloudinaryImage(resume.thumbnailLink);
+    await deleteCloudinaryImage(resume.profileInfo?.profilePreviewUrl);
+
+    await Resume.deleteOne({ _id: req.params.id, userId: req.user._id });
+
+    res.json({ message: 'Resume deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to delete resume', error: error.message });
+  }
+};
+
 
 module.exports = {
     createResume,

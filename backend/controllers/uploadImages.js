@@ -1,53 +1,46 @@
-const fs = require('node:fs');
-const path = require('node:path');
 const Resume = require('../models/Resume');
-const upload = require('../middlewares/uploadMiddleware')
+const upload = require('../middlewares/uploadMiddleware');
 
 const uploadResumeImages = async (req, res) => {
-    try {
+  try {
+    upload.fields([{ name: 'thumbnail' }, { name: 'profileImg' }])(req, res, async (err) => {
+      if (err) {
+        console.error('Multer error:', err);
+        return res.status(400).json({ message: 'File upload error', error: err.message });
+      }
 
-        upload.fields([{name: 'thumbnail'}, {name: 'profileImg'}]) (req, res, async (err) => {
-        const resumeId = req.params.id;
+      const resumeId = req.params.id;
 
-        const resume = await Resume.findOne({ _id: resumeId, userId: req.user._id });
+      const resume = await Resume.findOne({ _id: resumeId, userId: req.user._id });
 
-        if (!resume) {
-            return res.status(404).json({ message: 'Resume not found or unauthorized' });
-        }
+      if (!resume) {
+        return res.status(404).json({ message: 'Resume not found or unauthorized' });
+      }
 
-        const uploadsFolder = path.join(__dirname, '..','uploads');
-        const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const newThumbnail = req.files?.thumbnail?.[0];
+      const newProfileImage = req.files?.profileImg?.[0];
 
-        const newThumbnail = req.files.thumbnail?.[0];
-        const newProfileImage = req.files.profileImg?.[0];
+      if (newThumbnail) {
+        resume.thumbnailLink = newThumbnail.path; // Cloudinary returns a direct image URL in .path
+      }
 
-        if (newThumbnail) {
-            if (resume.thumbnailLink) {
-                const oldThumbnail = path.join(uploadsFolder, path.basename(resume.thumbnailLink));
-                if (fs.existsSync(oldThumbnail)) fs.unlinkSync(oldThumbnail);
-            }
-            resume.thumbnailLink = `${baseUrl}/uploads/${newThumbnail.filename}`;
-        }
+      if (newProfileImage) {
+        resume.profileInfo = resume.profileInfo || {}; // ensure it's not undefined
+        resume.profileInfo.profilePreviewUrl = newProfileImage.path;
+      }
 
-        if (newProfileImage) {
-            if (resume.profileInfo?.profilePreviewUrl) {
-                const oldProfile = path.join(uploadsFolder, path.basename(resume.profileInfo.profilePreviewUrl));
-                if (fs.existsSync(oldProfile)) fs.unlinkSync(oldProfile);
-            }
-            resume.profileInfo.profilePreviewUrl = `${baseUrl}/uploads/${newProfileImage.filename}`;
-        }
-        
-        await resume.save();
-        res.status(200).json({
-            message: 'Images uploaded successfully',
-            thumbnailLink: resume.thumbnailLink,
-            profilePreviewUrl: resume.profileInfo.profilePreviewUrl
-        });
+      await resume.save();
+
+      res.status(200).json({
+        message: 'Images uploaded successfully',
+        thumbnailLink: resume.thumbnailLink,
+        profilePreviewUrl: resume.profileInfo?.profilePreviewUrl,
+      });
     });
-    } catch (error) {
-        console.error('Error uploading images:', error);
-        res.status(500).json({ message: 'Failed to upload images', error: error.message });
-    }
-}
+  } catch (error) {
+    console.error('Error uploading images:', error);
+    res.status(500).json({ message: 'Failed to upload images', error: error.message });
+  }
+};
 
-module.exports = {uploadResumeImages};
+module.exports = { uploadResumeImages };
