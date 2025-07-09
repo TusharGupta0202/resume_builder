@@ -27,7 +27,7 @@ app.use('/api/resume', resumeRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'),
     {
         setHeaders: (res, path) => {
-            res.setHeader('Access-Control-Allow-Origin', 'https://resume-builder-mu-murex.vercel.app/');
+            res.setHeader('Access-Control-Allow-Origin', 'https://resume-builder-mu-murex.vercel.app');
         }
     }
 ));
