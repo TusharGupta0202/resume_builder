@@ -1,28 +1,30 @@
-const multer = require('multer');
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
-const cloudinary = require('../cloudinary');
+const multer = require("multer");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const cloudinary = require("../cloudinary");
 
-// Allow only image files
+// File filter
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+  const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
 
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Only JPG, JPEG, PNG allowed'), false);
+    cb(new Error("Only JPG, JPEG, PNG allowed"), false);
   }
 };
 
-// Cloudinary storage config
+// Cloudinary storage
 const storage = new CloudinaryStorage({
   cloudinary,
-  params: {
-    folder: 'resume_builder',
-    resource_type: 'image',
+  params: async (req, file) => {
+    return {
+      folder: "resume_builder", // This will auto-create
+      format: "png",
+      public_id: `${Date.now()}-${file.originalname}`,
+    };
   },
 });
 
-// Multer setup
 const upload = multer({
   storage,
   fileFilter,
