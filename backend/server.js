@@ -7,7 +7,6 @@ const authRoutes = require("./routes/authRoutes");
 const resumeRoutes = require("./routes/resumeRoutes");
 
 const app = express();
-console.log("Cloudinary:", process.env.CLOUDINARY_CLOUD_NAME);
 
 
 app.use(
