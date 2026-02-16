@@ -393,44 +393,73 @@ const EditResume = () => {
     }
   };
 
-  const uploadResumeImages = async () => {
-    try {
-      setIsLoading(true);
-      fixTailwindColors(resumeRef.current);
-      const imageDataUrl = await captureElementAsImage(resumeRef.current);
+const uploadResumeImages = async () => {
+  try {
+    setIsLoading(true);
+    fixTailwindColors(resumeRef.current);
 
-      const thumbnailFile = dataURLToFile(
-        imageDataUrl,
-        `resume-${resumeId}.png`
-      );
-      const profileImageFile = resumeData?.profileInfo?.profileImg || null;
+    // Capture thumbnail from resume preview
+    const imageDataUrl = await captureElementAsImage(resumeRef.current);
 
-      const formData = new FormData();
-      if(profileImageFile) formData.append("profileImg", profileImageFile);
-      if(thumbnailFile) formData.append("thumbnail", thumbnailFile);
+    const thumbnailFile = dataURLToFile(
+      imageDataUrl,
+      `resume-${resumeId}.png`
+    );
 
-      const uploadResponse = await axiosInstance.put(
-        API_PATHS.RESUME.UPLOAD_IMAGES(resumeId),
-        formData,
-        {headers : {"Content-Type" : "multipart/form-data"}}
-      )
+    const profileImageFile =
+      resumeData?.profileInfo?.profileImg || null;
 
-      const {thumbnailLink, profilePreviewUrl} = uploadResponse.data;
+    const formData = new FormData();
 
-      console.log("RESUME_DATA___",resumeData);
-
-      await updateResumeDetails(thumbnailLink,profilePreviewUrl);
-
-      toast.success("Resume Updated Successfully!");
-      navigate("/dashboard");
-      
-    } catch (error) {
-      console.error("Error uploading images : ",error)
-      toast.error("Failed to upload Images");
-    } finally {
-      setIsLoading(false);
+    if (profileImageFile) {
+      formData.append("profileImg", profileImageFile);
     }
-  };
+
+    if (thumbnailFile) {
+      formData.append("thumbnail", thumbnailFile);
+    }
+
+    // 🚀 Upload to backend
+    const uploadResponse = await axiosInstance.put(
+      API_PATHS.RESUME.UPLOAD_IMAGES(resumeId),
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    const { thumbnailLink, profilePreviewUrl } =
+      uploadResponse.data;
+
+    // Update local state immediately so preview updates
+    setResumeData((prev) => ({
+      ...prev,
+      thumbnailLink: thumbnailLink || prev.thumbnailLink,
+      profileInfo: {
+        ...prev.profileInfo,
+        profilePreviewUrl:
+          profilePreviewUrl || prev.profileInfo.profilePreviewUrl,
+      },
+    }));
+
+    // Update DB resume data
+    await updateResumeDetails(
+      thumbnailLink,
+      profilePreviewUrl
+    );
+
+    toast.success("Resume Updated Successfully!");
+    navigate("/dashboard");
+  } catch (error) {
+    console.error("UPLOAD ERROR:", error);
+    toast.error("Failed to upload Images");
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   const updateResumeDetails = async (thumbnailLink,profilePreviewUrl) => {
     try {
