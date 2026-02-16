@@ -415,11 +415,19 @@ const EditResume = () => {
         {headers : {"Content-Type" : "multipart/form-data"}}
       )
 
-      const {thumbnailLink, profilePreviewUrl} = uploadResponse.data;
+      const { thumbnailLink, profilePreviewUrl } = uploadResponse.data;
+      
+      setResumeData(prev => ({
+        ...prev,
+        thumbnailLink: thumbnailLink || prev.thumbnailLink,
+        profileInfo: {
+          ...prev.profileInfo,
+          profileImg: null,
+          profilePreviewUrl: profilePreviewUrl || prev.profileInfo.profilePreviewUrl
+        }
+      }));
 
-      console.log("RESUME_DATA___",resumeData);
-
-      await updateResumeDetails(thumbnailLink,profilePreviewUrl);
+      await updateResumeDetails(thumbnailLink, profilePreviewUrl);
 
       toast.success("Resume Updated Successfully!");
       navigate("/dashboard");
