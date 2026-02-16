@@ -58,7 +58,7 @@ const LandingPage = () => {
               Get Started
             </button>
           </div>
-          <div className='w-full md:w-1/2'>
+          <div className='w-full md:w-1/2'  >
             <img 
               src={HERO_IMG}
               alt='Hero Image'
@@ -67,7 +67,7 @@ const LandingPage = () => {
           </div>
         </div>
 
-        <section className='mt-5'>
+        <section className='mt-10'>
           <h2 className='text-2xl font-bold text-center mb-22'>
             Features That Make You Shine
           </h2>

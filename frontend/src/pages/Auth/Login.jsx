@@ -64,7 +64,7 @@ const Login = ({setCurrentPage}) => {
       <form onSubmit={handleLogin}>
 
         <Input 
-          type='text'
+          type='email'
           label='Email address'
           placeholder='jp@example.com'
           value={email}
