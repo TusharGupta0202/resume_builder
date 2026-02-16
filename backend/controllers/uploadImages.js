@@ -35,7 +35,7 @@ const uploadResumeImages = async (req, res) => {
         } catch (deleteErr) {
           console.warn('Failed to delete old thumbnail from Cloudinary:', deleteErr.message);
         }
-        resume.thumbnailLink = newThumbnail.path;
+        resume.thumbnailLink = newThumbnail.secure_url;
       }
 
       // Delete old profile image if uploading a new one
@@ -47,7 +47,7 @@ const uploadResumeImages = async (req, res) => {
           console.warn('Failed to delete old profile image from Cloudinary:', deleteErr.message);
         }
         resume.profileInfo = resume.profileInfo || {};
-        resume.profileInfo.profilePreviewUrl = newProfileImage.path;
+        resume.profileInfo.profilePreviewUrl = newProfileImage.secure_url;
       }
 
       await resume.save();
